@@ -1,0 +1,44 @@
+# NuGet API v3 を使用して最新バージョンを取得
+function Get-LatestNuGetVersion {
+    param (
+        [string]$PackageId
+    )
+    $indexUrl = "https://api.nuget.org/v3-flatcontainer/$PackageId/index.json"
+
+    try {
+        $response = Invoke-RestMethod -Uri $indexUrl -UseBasicParsing -ErrorAction Stop
+        $latestVersion = $response.versions[-1]
+        return $latestVersion
+    } catch {
+        Write-Warning "取得失敗: $PackageId"
+        return $null
+    }
+}
+
+# packages.config を読み込み
+[xml]$xml = Get-Content "./packages.config"
+$results = @()
+
+foreach ($package in $xml.packages.package) {
+    $id = $package.id
+    $currentVersion = $package.version
+    $latestVersion = Get-LatestNuGetVersion -PackageId $id
+
+    $status = if ($latestVersion -ne $null -and $latestVersion -ne $currentVersion) {
+        "更新あり"
+    } elseif ($latestVersion -eq $currentVersion) {
+        "最新"
+    } else {
+        "不明"
+    }
+
+    $results += [PSCustomObject]@{
+        PackageId       = $id
+        CurrentVersion  = $currentVersion
+        LatestVersion   = $latestVersion
+        Status          = $status
+    }
+}
+
+# 結果表示
+$results | Format-Table -AutoSize

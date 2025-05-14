@@ -7,10 +7,8 @@ require 'time'
 account_name = "your_storage_account"
 account_key = "your_base64_encoded_key"
 table_name = "your_table_name"
-partition_key = "your_partition_key"
-row_key = "your_row_key"
 
-resource = "#{table_name}(PartitionKey='#{partition_key}',RowKey='#{row_key}')"
+resource = "#{table_name}"
 uri = URI("https://#{account_name}.table.core.windows.net/#{resource}")
 
 method = "GET"
@@ -25,6 +23,13 @@ string_to_sign = "#{method}\n\n\n#{timestamp}\n#{canonicalized_resource}"
 decoded_key = Base64.strict_decode64(account_key)
 signature = OpenSSL::HMAC.digest('sha256', decoded_key, string_to_sign)
 encoded_signature = Base64.strict_encode64(signature)
+
+# デバッグ用のコード
+puts "String to Sign: #{string_to_sign}"
+puts "Decoded Key: #{decoded_key}"
+puts "Signature: #{signature}"
+puts "Encoded Signature: #{encoded_signature}"
+puts "Headers: #{headers}"
 
 # リクエストヘッダー
 headers = {
